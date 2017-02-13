@@ -6,6 +6,8 @@
     <script src="https://unpkg.com/react@15/dist/react.js"></script>
     <script src="https://unpkg.com/react-dom@15/dist/react-dom.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/1.0.0/fetch.js"></script>
+    <script src="https://npmcdn.com/react-draggable"></script>
     <link rel="stylesheet" type="text/css" href="style.css">
     <title>Building the Boards: Methods to Boards</title>
 </head>
@@ -27,6 +29,9 @@
                     this.refs.newText.focus()
                     this.refs.newText.select()
                 }
+            },
+            shouldComponentUpdate(nextProps, nextState){
+                return this.props.children !== nextProps.children || this.state !== nextState
             },
             randomBetween(x, y, s){
                 return (x + Math.ceil(Math.random() * (x-y))) + s
@@ -67,8 +72,10 @@
 
         render() {
 
-           return (this.state.editing) ? this.renderForm():
-            this.renderDisplay()
+           return ( <ReactDraggable>
+            {(this.state.editing) ? this.renderForm():
+            this.renderDisplay()}
+            </ReactDraggable>)
         }
     })
 
@@ -87,6 +94,22 @@
         getInitialState() {
             return{
                 notes:[]
+            }
+        },
+
+        componentWillMount() {
+            if (this.props.count){
+                var url = `http://baconipsum.com/api/?type=all-meat&sentences=${this.props.count}`
+                fetch(url)
+                    .then(results => results.json())
+                    .then(array => array[0])
+                    .then(text => text.split('. '))
+                    .then(array => array.forEach(
+                        sentence => this.add(sentence)))
+                    .catch(function(err) {
+                        console.log("Didn't connect to API",err)
+                    })
+
             }
         },
 
@@ -142,7 +165,7 @@
     })
 
 
-    ReactDOM.render(<Board count={10}/>, document.getElementById('react-container'))
+    ReactDOM.render(<Board count={6}/>, document.getElementById('react-container'))
 
 
     </script>
